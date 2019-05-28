@@ -1,3 +1,5 @@
+--playerEngine = require("player_engine")
+require("button")
 
 local elements = {}
 local nelements = 5
@@ -6,6 +8,16 @@ local startXposition = 1
 local startYposition = 1
 local dimX 
 local dimY 
+local screenW
+local screenH
+local status --DELETAR: para teste
+
+local GAME_STATUS_NOT_CONNECTED = "not_connected"
+local GAME_STATUS_SERVER_ERROR = "server_error"
+local GAME_STATUS_NO_GAME = "no_game"
+local GAME_STATUS_WAITING_TO_START = "waiting_to_start"
+local GAME_STATUS_IN_GAME = "in_game"
+local GAME_STATUS_FINISHED = "game_finished"
 
 function createElements(map)
 	math.randomseed(os.time())
@@ -37,8 +49,26 @@ function createPlayer(mycolor)
 	table.insert(players, {act_x = myX, act_y = myY, color = mycolor, elementsId = {}})
 end
 
+function newGameButton()
+	local text = "New Game"
+	local offset = buttonFont:getWidth(text)/2
+
+        button:new(function()
+                    status = GAME_STATUS_NO_GAME
+                    end, text, screenW/2 - offset, 3*screenH/4 , 10, 10, {0,0,0}, buttonFont, {255,255,0}
+          )
+
+end
+
 function love.load()
 
+	defaultFont = love.graphics.newFont(12)
+	Font1 = love.graphics.newFont("fonts/ka1.ttf", 40)
+	gameOverFont = love.graphics.newFont("fonts/ka1.ttf", 60)
+	buttonFont = love.graphics.newFont("fonts/8bit.ttf", 20)
+
+	screenW, screenH = love.graphics.getDimensions()
+	status = GAME_STATUS_FINISHED
 
 	move = {
         	index = 1,
@@ -72,6 +102,7 @@ function love.load()
 	createPlayer({255,0,0})
 	createPlayer({0,255,0})
 	
+	newGameButton()
 end
 
 function borderCollision(x, y)
@@ -108,6 +139,19 @@ function love.keypressed(key)
 	end
 end
 
+function getWinner()
+	return 1
+end
+
+function love.update(dt)
+
+	updateButtons()
+--	playerEng.process()
+
+--	local status = playerEng.getGameStatus()
+	--if  status == "no_game" or status == 
+end
+
 
 function drawGrid()
 
@@ -136,10 +180,57 @@ function drawPlayers()
 	end
 end
 
+function drawGameOver()
+
+	love.graphics.setColor(255, 255, 0)
+	love.graphics.setFont(gameOverFont)
+	love.graphics.printf("GAME_OVER", 0, screenH/8, screenW, "center")
+	love.graphics.setFont(Font1)
+	love.graphics.printf("WINNER:", 0, screenH/4 + screenH/8 , screenW, "center")
+	local text = "PLAYER  " .. getWinner()
+	love.graphics.printf(text, 0, screenH/2, screenW, "center")
+
+	drawButtons()
+end
+
+function drawLoadingGame()
+
+	love.graphics.setColor(255, 255, 255)
+	local text = "Loading game ..."
+	love.graphics.setFont(Font1)
+	love.graphics.printf(text, 0, screenH/2, screenW, "center")
+end
+
+function drawErrorMsg(text)
+	
+	love.graphics.setColor(255, 0, 0)
+	love.graphics.setFont(defaultFont)
+	love.graphics.printf(text, 0, screenH/2, screenW, "center")
+end
+
 function love.draw()
 
-	drawGrid()
-	drawElements()
-	drawPlayers()
+	-- love.timer.sleep(50)
+
+	--local status = playerEng.getGameStatus()
+
+	if(status == GAME_STATUS_FINISHED) then
+		drawGameOver()
+
+	elseif(status == GAME_STATUS_IN_GAME or status == GAME_STATUS_WAITING_TO_START) then
+		drawGrid()
+		drawElements()
+		drawPlayers()
+
+	elseif(status == GAME_STATUS_NOT_CONNECTED) then
+		drawErrorMsg("ERROR: GAME NOT CONNECTED")
+
+	elseif(status == GAME_STATUS_SERVER_ERROR) then
+		drawErrorMsg("ERROR: SERVER ERROR")
+	
+	elseif(status == GAME_STATUS_NO_GAME) then
+		drawLoadingGame()
+	end
 end
+
 
