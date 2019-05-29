@@ -172,23 +172,29 @@ function process_incomming_player_state(player_state)
     end
 
     -- -- New player
-    local server_player_state = player_state_by_player_id[player_state.player_id]
-    if (server_player_state == nil) then
-        player_state_by_player_id[player_state.player_id] = player_state
-        server_player_state = player_state
-        -- Asserts that a new player starts with 0 points
-        server_player_state.points = 0
+    local old_player_state = player_state_by_player_id[player_state.player_id]
+    local points = 0
+    if (old_player_state ~= nil) then
+        points = old_player_state.points
     end
     
     --  Consumes a fruit
     if (board_data == BOARD_DATA_FRUIT) then
         logi("[" .. player_state.player_id .. "] Consuming fruits.")
-        server_player_state.points = server_player_state.points + 1
+        points = points + 1
     end
     
     -- Updates board position
-    board[server_player_state.x][server_player_state.y] = BOARD_DATA_EMPTY
+    if (old_player_state ~= nil) then
+        board[old_player_state.x][old_player_state.y] = BOARD_DATA_EMPTY
+    end
     board[player_state.x][player_state.y] = BOARD_DATA_PLAYER
+
+    -- Updates points
+    player_state.points = points
+
+    -- Updates server player_state
+    player_state_by_player_id[player_state.player_id] = player_state
 end
 
 function get_wall_time()
