@@ -52,7 +52,7 @@ function print_world(game_status, game_state)
 end
 
 local player_engine = require("player_engine")
-player_engine.init("mosquitto", 1883)
+player_engine.init("localhost", 1883)
 
 local x = -10
 local y = 0

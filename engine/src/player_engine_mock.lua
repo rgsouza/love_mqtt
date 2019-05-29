@@ -17,7 +17,7 @@ local MQTT = require("mqtt_library")
 local randon = require("random")
 local socket = require "socket"
 
-local player_id = "player_" .. randon.randomNum(10)
+local player_id = 1--"player_" .. randon.randomNum(10)
 local mqtt_client = null
 
 local connected = false
@@ -102,14 +102,23 @@ function get_wall_time()
     return socket.gettime()*1000
 end
 
-function update_player_state(game_id, x, y) 
+function update_player_state(game_id, x, y, color)
+	print("DEBUG: update_player_states") 
     player_state.game_id = game_id
     player_state.x = x
     player_state.y = y
+    player_state.color = color
 end
 
 function get_game_state()
+	--print(#game_state)
+	--print(game_state.world_clock)
+	--print(game_state.players_states[1].x)
     return game_state
+end
+
+function get_player_id()
+	return 1
 end
 
 function get_game_status() 
@@ -177,5 +186,6 @@ PlayerEngine.process = process
 PlayerEngine.update_player_state = update_player_state
 PlayerEngine.get_game_state = get_game_state
 PlayerEngine.get_game_status = get_game_status
+PlayerEngine.get_player_id = get_player_id
 
 return(PlayerEngine)

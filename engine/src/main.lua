@@ -112,7 +112,7 @@ function love.load()
 	print("DEBUG: load")	
 	print(player.x, player.y, player.color)
 	newGameButton()
-	playerEngine.init("mosquitto", 1883)
+	playerEngine.init("localhost", 1883)
 	myID = playerEngine.get_player_id()
 end
 
