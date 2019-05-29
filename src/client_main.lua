@@ -54,8 +54,8 @@ end
 local player_engine = require("player_engine")
 player_engine.init("localhost", 1883)
 
-local x = -10
-local y = 0
+local x = 1
+local y = 1
 local game_id = 1
 
 local next_move_time = 0
@@ -66,8 +66,8 @@ while true do
     player_engine.process()
     
     if next_move_time < curr_wall_time then
-        x = (x + 1) % BOARD_X_AXIS_SIZE
-        y = (y + 1) % BOARD_Y_AXIS_SIZE
+        x = ((x + 1) % BOARD_X_AXIS_SIZE) + 1
+        y = ((y + 1) % BOARD_Y_AXIS_SIZE) + 1
         player_engine.update_player_state(game_id, x, y)
         next_move_time = curr_wall_time + PERIOD_MOVEMENT_IN_MILLIS
     end
