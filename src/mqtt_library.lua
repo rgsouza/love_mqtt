@@ -72,7 +72,6 @@ local socket = require("socket")
 function isPsp() return(Socket ~= nil) end
 
 if (not isPsp()) then
-  print("aqwwwww")
   require("socket")
   require("io")
   require("ltn12")
