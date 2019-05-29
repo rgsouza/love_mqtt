@@ -6,8 +6,8 @@ end
 local PERIOD_MOCK_PLAYER_STATE_IN_MILLIS = 1000
 local next_mock_player_state_time = 0
 
-local game_engine = require("localhost")
-game_engine.init("mosquitto", 1883)
+local game_engine = require("game_engine")
+game_engine.init("localhost", 1883)
 while true do
     local curr_wall_time = get_wall_time()
     game_engine.process()
