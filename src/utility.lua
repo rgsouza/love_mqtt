@@ -1,3 +1,5 @@
+local socket = require("socket")
+
 -- utility.lua
 -- ~~~~~~~~~~~
 -- Please do not remove the following notices.

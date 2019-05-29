@@ -1,3 +1,4 @@
+local socket = require("socket")
 -- mqtt_library.lua
 -- ~~~~~~~~~~~~~~~~
 -- Please do not remove the following notices.
@@ -71,6 +72,7 @@
 function isPsp() return(Socket ~= nil) end
 
 if (not isPsp()) then
+  print("aqwwwww")
   require("socket")
   require("io")
   require("ltn12")
