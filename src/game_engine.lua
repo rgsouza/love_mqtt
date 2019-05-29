@@ -18,16 +18,17 @@ local BOARD_X_AXIS_SIZE = 20
 local BOARD_DATA_FRUIT  = "F"
 local BOARD_DATA_PLAYER = "P"
 local BOARD_DATA_EMPTY  = "E"
+local PROB_GEN_FRUIT = 0.2
 
 local MOCK_ENABLED = false
 
 local MQTT = require("mqtt_library")
-local randon = require("random")
+local random = require("random")
 local socket = require "socket"
 local binser = require("binser")
 local mime = require("mime")
 
-local gamemaster_id = "gamemaster_" .. randon.randomNum(10)
+local gamemaster_id = "gamemaster_" .. random.randomNum(10)
 local mqtt_client = nil
 
 local connected = false
@@ -53,11 +54,15 @@ end
 
 function init_game() 
     game_id = 1
-    -- game_id = randon.randomNum(10)
+    -- game_id = random.randomNum(10)
     for x=1,BOARD_X_AXIS_SIZE do
         board[x] = {}
         for y=1,BOARD_Y_AXIS_SIZE do
-            board[x][y] = BOARD_DATA_EMPTY
+            if random.rollDice(PROB_GEN_FRUIT) then
+                board[x][y] = BOARD_DATA_FRUIT
+            else 
+                board[x][y] = BOARD_DATA_EMPTY
+            end
         end
     end
     start_time = get_wall_time()

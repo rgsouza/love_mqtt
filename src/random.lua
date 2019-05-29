@@ -24,6 +24,9 @@ local function randomNum(lenght)
     return result
 end
 
+local function rollDice(prob)
+    return math.random() < prob
+end
 -- ------------------------------------------------------------------------- --
 -- Define Random module
 -- ~~~~~~~~~~~~~~~~~~~~
@@ -33,6 +36,7 @@ local Random = {}
 -- For Random = require("random")
 Random.randomString = randomString
 Random.randomNum = randomNum
+Random.rollDice = rollDice
 
 return (Random)
 
