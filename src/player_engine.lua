@@ -138,7 +138,7 @@ function get_game_status()
         return GAME_STATUS_IN_GAME
     end
 
-    if game_state.finish_time < 0 then
+    if game_state.finish_time > 0 then
         return GAME_STATUS_FINISHED
     end
 
