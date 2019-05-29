@@ -1,0 +1,12 @@
+#!/usr/bin/env ash
+
+################################################################
+# Workaround for lack of version flag in busybox md5sum applet #
+################################################################
+
+if [ "$1" = "--version" ]; then
+    busybox --help || true          # ignore non-zero exit code
+    exit 0                          # emulate md5sum's '--version' exit code
+fi
+
+busybox md5sum "$@"                 # pass all arguments to busybox applet
