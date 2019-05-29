@@ -7,11 +7,11 @@ local socket = require("socket")
 local elements = {}
 local nelements = 5
 local startXposition = 1
-local startYposition = 1
+local yOffset = 2*32
 local dimX, dimY
 local screenW
 local screenH
-local status --DELETAR: para teste
+--local status --DELETAR: para teste
 local nextMoveTime = 0
 local gameID = 1
 local myID
@@ -31,16 +31,6 @@ function getWallTime()
     return socket.gettime()*1000
 end
 
-function createElements(map)
-	math.randomseed(os.time())
-        for i=1, nelements do
-
-                local myid = i
-                local myXc = math.random(2, #map[1]-2)*32 + 16
-                local myYc = math.random(2, #map-2)*32 + 16
-                table.insert(elements, { id = i, xc = myXc, yc = myYc, r = 10})
-        end
-end
 
 
 function createPlayer(mycolor)
@@ -49,11 +39,11 @@ function createPlayer(mycolor)
 
 	local x0 = math.random(1, dimX-1)
 	local y0 = math.random(1, dimY-1)
-	local r = math.random(0, 255)
-	local g = math.random(0, 255)
-	local b = math.random(0, 255)
+	local r = math.random()
+	local g = math.random()
+	local b = math.random()
 
-	return {x = x0, y = y0, color = {r,g,b}}
+	return {x = x0, y = y0, color = {r = r,g = g ,b = b}}
 
 end
 
@@ -72,12 +62,13 @@ end
 function love.load()
 
 	defaultFont = love.graphics.newFont(12)
-	Font1 = love.graphics.newFont("fonts/ka1.ttf", 40)
+	Font1 = love.graphics.newFont("fonts/ka1.ttf", 50)
+	Font2 = love.graphics.newFont("fonts/ka1.ttf", 25)
 	gameOverFont = love.graphics.newFont("fonts/ka1.ttf", 60)
 	buttonFont = love.graphics.newFont("fonts/8bit.ttf", 20)
 
 	screenW, screenH = love.graphics.getDimensions()
-	status = GAME_STATUS_FINISHED
+---	status = GAME_STATUS_FINISHED
 
 
 	map = {
@@ -100,8 +91,8 @@ function love.load()
 	dimY = #map
 	dimX = #map[1]
 
-
-	createElements(map)
+	print(dimX)
+	print(dimY)
 	
 	
 	-- Insere 2 players para teste
@@ -116,7 +107,11 @@ function love.load()
 	myID = playerEngine.get_player_id()
 end
 
-function borderCollision(x, y)
+function borderCollision(x, y, players)
+
+--	local state = playerEngine.get_game_state()
+--        players = state.players_states
+
 	local x = players[myID].x + x
 	local y = players[myID].y + y
 
@@ -124,9 +119,9 @@ function borderCollision(x, y)
 end
 
 -- Adicionar colisao com os outros jogadores
-function testCollision(x, y)
+function testCollision(x, y, players)
 
-	return borderCollision(x, y)
+	return borderCollision(x, y, players)
 end
 
 
@@ -134,45 +129,45 @@ function love.keypressed(key)
 
 	local state = playerEngine.get_game_state()
 	players = state.players_states
+
 	if key == "up" then
-		if not testCollision(0, -1) then
+		player.x = players[myID].x
+		player.y = players[myID].y - 1
 
-			player.x = players[myID].x
-			player.y = players[myID].y - 1
-			waitingToupdate = true
 
-			--players[move.index].act_y = players[move.index].act_y - 32
-		end
 	elseif key == "down" then
-		if not testCollision(0, 1) then
-			print("DEBUG KEY: DOWN")
-			player.x = players[myID].x
-                        player.y = players[myID].y + 1
-                        waitingToupdate = true
+		print("DEBUG KEY: DOWN")
+		player.x = players[myID].x
+		player.y = players[myID].y + 1
 
-			-- players[move.index].act_y = players[move.index].act_y + 32
-		end
 	elseif key == "left" then
-		if not testCollision(-1, 0) then
-			
-			player.x = players[myID].x - 1
-                        player.y = players[myID].y 
-                        waitingToUpdate = true
-			--players[move.index].act_x = players[move.index].act_x - 32
-		end
+		player.x = players[myID].x - 1
+		player.y = players[myID].y 
+
 	elseif key == "right" then
-		if not testCollision(1, 0) then
-		
-			player.x = players[myID].x + 1
-                        player.y = players[myID].y 
-                        waitingToupdate = true
-			--players[move.index].act_x = players[move.index].act_x + 32
-		end
+		player.x = players[myID].x + 1
+		player.y = players[myID].y 
+
 	end
 end
 
-function getWinner()
-	return 1
+function getWinner(players)
+
+	local state = playerEngine.get_game_state()
+	local players = state.players_states
+
+	local winner 
+	local points = 0
+
+	for k, v in pairs(players) do
+		print(v.points)
+		if v.points >= points then
+			points = v.points
+			winner = v.player_id
+		end
+        end
+
+	return winner, points
 end
 
 
@@ -183,15 +178,14 @@ function love.update(dt)
 	updateButtons()
 	playerEngine.process()
 
-	
 	if nextMoveTime < currWallTime  then
-		print("DEGUB UPDATE:", player.x, player.y)
+		print("DEBUG UPDATE:", player.x, player.y, "playerID", myID)
+
         	playerEngine.update_player_state(gameID, player.x, player.y, player.color)
         	nextMoveTime = currWallTime + PERIOD_MOVEMENT_IN_MILLIS
-		waitingToUpdate = false
     	end
 
-
+	
 
 end
 
@@ -201,7 +195,7 @@ function drawGrid()
 	love.graphics.setColor(255, 255, 255)
         for j=1, dimY do
                 for i=1, dimX do
-                        love.graphics.rectangle("line", i * 32, j * 32, 32, 32)
+                        love.graphics.rectangle("line", i * 32, j * 32 + yOffset, 32, 32)
                 end
         end
 
@@ -212,30 +206,48 @@ function drawElements(elements)
 	local radius = 10
 	love.graphics.setColor(255, 255, 0)
 	for i=1, #elements do
-    		love.graphics.circle("fill", elements[i].x*32 + 16, elements[i].y*32 + 16, radius)
+    		love.graphics.circle("fill", elements[i].x*32 + 16, elements[i].y*32 + 16 + yOffset, radius)
 	end
 end
 
 function drawPlayers(players)
 
---	print("debug: draw players")
-	for i=1, #players do 
-		--print("debug: draw players")
-		love.graphics.setColor(players[i].color)
-        	love.graphics.rectangle("fill", players[i].x*32, players[i].y*32, 32, 32)
+	for k, v in pairs(players) do 
+		if k == myID then 
+			love.graphics.setColor(255, 0, 0)
+			 local state = playerEngine.get_game_state()
+			print("DEBUG REAL POSITION:", state.players_states[myID].x, state.players_states[myID].y + yOffset)
+
+		else
+			love.graphics.setColor(v.color.r, v.color.g, v.color.b) end
+        	love.graphics.rectangle("fill", v.x*32, v.y*32 + yOffset, 32, 32)
 	end
 end
 
 function drawGameOver()
 
+	local players = playerEngine.get_game_state().players_states
+      	local winner, points = getWinner(players)
+	local text1, text2 
+
+	if winner == myID then
+		text1 = "CONGRATULATIONS"
+		text2 = "YOU WON"
+	else
+		text1 = "GAME OVER"
+                text2 = "YOU LOSE"
+	end
+
 	love.graphics.setColor(255, 255, 0)
 	love.graphics.setFont(gameOverFont)
-	love.graphics.printf("GAME_OVER", 0, screenH/8, screenW, "center")
+	love.graphics.printf(text1, 0, screenH/8, screenW, "center")
 	love.graphics.setFont(Font1)
-	love.graphics.printf("WINNER:", 0, screenH/4 + screenH/8 , screenW, "center")
-	local text = "PLAYER  " .. getWinner()
-	love.graphics.printf(text, 0, screenH/2, screenW, "center")
+	love.graphics.printf(text2, 0, screenH/4 + screenH/8 , screenW, "center")
 
+	love.graphics.setFont(Font2)
+	local text = "Score: " ..players[myID].pointsi  
+	love.graphics.printf(text, 0, screenH/2, screenW, "center")
+	
 	drawButtons()
 end
 
@@ -254,21 +266,27 @@ function drawErrorMsg(text)
 	love.graphics.printf(text, 0, screenH/2, screenW, "center")
 end
 
+
 function love.draw()
 
 	-- love.timer.sleep(50)
-
+	
 	local status = playerEngine.get_game_status()
-
 	if(status == GAME_STATUS_FINISHED) then
 		drawGameOver()
+		print("GAME OVER")
 
 	elseif(status == GAME_STATUS_IN_GAME or status == GAME_STATUS_WAITING_TO_START) then
 		local state = playerEngine.get_game_state()
 		drawGrid()
 		drawElements(state.fruits)
+
 		--print(#state.players_states)
 		drawPlayers(state.players_states)
+
+		local winner, points = getWinner()
+		local text = "PLAYER  " .. winner .. " " ..points.. "points"
+		print(text)
 
 	elseif(status == GAME_STATUS_NOT_CONNECTED) then
 		drawErrorMsg("ERROR: GAME NOT CONNECTED")

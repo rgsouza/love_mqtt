@@ -32,12 +32,11 @@ function get_wall_time()
     return socket.gettime()*1000
 end
 
-
 function print_world(game_status, game_state) 
 
     print("-------------")
     print("game_status: " .. game_status )
-    if (game_status == "not_connected") then
+    if (game_status == "not_connected") or (game_status == "no_game")  then
         return
     end
 
@@ -57,7 +56,7 @@ function print_world(game_status, game_state)
 end
 
 local player_engine = require("player_engine")
-player_engine.init("localhost", 1883)
+player_engine.init("mosquitto", 1883)
 
 local x = 1
 local y = 1
