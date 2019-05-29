@@ -1,7 +1,7 @@
 local TOPIC_GAME_STATE = "/game/state"
 local TOPIC_PLAYER_STATE = "/player/state"
-local PERIOD_SEND_PLAYER_STATE_IN_MILLIS = 2000
-local PERIOD_MQTT_HANDLER_IN_MILLIS = 1000
+local PERIOD_SEND_PLAYER_STATE_IN_MILLIS = 200
+local PERIOD_MQTT_HANDLER_IN_MILLIS = 200
 local GRACE_TIME_GAME_STATE_IN_MILLIS = 5000
 
 local GAME_STATUS_NOT_CONNECTED = "not_connected"
@@ -118,15 +118,18 @@ function get_game_state()
 end
 
 function get_game_status() 
-    if not connected or game_state == nil then
+    if not connected then
         return GAME_STATUS_NOT_CONNECTED
     end
-
+    
+    if game_state == nil then 
+	return GAME_STATUS_NO_GAME
+    end
     if game_state.world_clock + GRACE_TIME_GAME_STATE_IN_MILLIS < get_wall_time() then 
         return GAME_STATUS_SERVER_ERROR
     end
 
-    if game_state.start_time < 0 then
+    if game_state.start_time < 0  then
         return GAME_STATUS_NO_GAME
     end
 
