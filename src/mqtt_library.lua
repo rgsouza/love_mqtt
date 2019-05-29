@@ -1,4 +1,4 @@
--- local socket = require("socket")
+local socket = require("socket")
 -- mqtt_library.lua
 -- ~~~~~~~~~~~~~~~~
 -- Please do not remove the following notices.
