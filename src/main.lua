@@ -14,6 +14,7 @@ local screenW
 local screenH
 --local status --DELETAR: para teste
 local nextMoveTime = 0
+local startTime = 0
 local gameID
 local myID
 local player
@@ -30,6 +31,7 @@ local PERIOD_MOVEMENT_IN_MILLIS = 1000
 local START_DELAY_IN_MILLIS = 1000
 
 local playerCreated = false
+local firstInGame = true
 
 function getWallTime()
     return socket.gettime()*1000
@@ -197,7 +199,10 @@ function love.update(dt)
 		playerCreated = true
 	end	
 
-	local canMove = (status == GAME_STATUS_IN_GAME) and (status ~= GAME_STATUS_WAITING_TO_START)
+	local canMove = (status == GAME_STATUS_IN_GAME) and 
+			(status ~= GAME_STATUS_WAITING_TO_START) and
+			startTime < currWallTime
+
 	if nextMoveTime < currWallTime and canMove then
 		print("DEBUG UPDATE:", player.x, player.y, "playerID", myID, "GAME_ID", gameID)
 	
@@ -233,24 +238,9 @@ end
 function drawPlayers(players)
 	print("n players:" .. #players)
 
-	for k, v in pairs(players) do 
-		if k == myID then 
-			love.graphics.setColor(255, 0, 0)
-			-- local state = playerEngine.get_game_state()
-			--print("DEBUG REAL POSITION:", state.players_states[myID].x, state.players_states[myID].y + yOffset)
-			--print(state.players_states[myID].color.r)
-			love.graphics.setFont(defaultSize)
-					
-			local text = "SCORE: " ..v.points			
-			love.graphics.printf(text, xOffset + 32, 2*32 - 16, screenW, "left")
-
-		else
-			print(k)	
-			love.graphics.setColor(v.color.r, v.color.g, v.color.b) 
-		end
-
-	--	print(k)
-        	love.graphics.rectangle("fill", v.x*32 + xOffset, v.y*32 + yOffset, 32, 32)
+	for k, v in pairs(players) do 		
+		love.graphics.setColor(v.color.r, v.color.g, v.color.b) 
+		love.graphics.rectangle("fill", v.x*32 + xOffset, v.y*32 + yOffset, 32, 32)
 	end
 end
 
@@ -262,10 +252,10 @@ function drawWaitingPlayers()
 	love.graphics.printf(text, 0, 32/2, screenW, "center")
 end
 
-function drawScore(points)
+function drawScore(p)
 	
-	local text = "SCORE: " ..points
-	love.graphics.setColor(255, 0, 0)
+	local text = "SCORE: " ..p.points
+	love.graphics.setColor(p.color.r, p.color.g, p.color.b)
 	love.graphics.setFont(defaultSize)				
 	love.graphics.printf(text, xOffset + 32, 2*32 - 16, screenW, "left")
 end
@@ -311,15 +301,16 @@ function drawErrorMsg(text)
 	love.graphics.printf(text, 0, screenH/2, screenW, "center")
 end
 
-local firstInGame = true
-local startTime 
+ 
 function love.draw()
 
 	-- love.timer.sleep(50)
 	
 	local status = playerEngine.get_game_status()
+	print(status)
 	if(status == GAME_STATUS_FINISHED) then
 		drawGameOver()
+		firstInGame = true
 		print("GAME OVER")
 
 	elseif(status == GAME_STATUS_IN_GAME or status == GAME_STATUS_WAITING_TO_START) then
@@ -336,8 +327,10 @@ function love.draw()
 
 		if status == GAME_STATUS_WAITING_TO_START or startTime > getWallTime() then 
 			drawWaitingPlayers() 
-		else		
-			drawScore(state.players_states[myID].points)
+		else	
+			if state.players_states then
+				drawScore(state.players_states[myID])
+			end		
 		end 
 
 	elseif(status == GAME_STATUS_NOT_CONNECTED) then
