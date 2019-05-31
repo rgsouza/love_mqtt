@@ -3,40 +3,48 @@ services:
   mosquitto:
     container_name: mosquitto
     image: eclipse-mosquitto
+    volumes:
+      - "$PWD/mosquitto.conf:/mosquitto/config/mosquitto.conf"
+      - "$PWD/mosquitto.log:/mosquitto/log/mosquitto.log"
     networks:
      - lua-network
     ports:
       - 1883:1883
       - 9001:9001
 
-  # client-rpc:
-  #   image: brunoguic/lua:latest
-  #   volumes:
-  #     - "/home/brunoguic/masters/sd/trab2/src/:/src/"
-  #   networks:
-  #    - lua-network
-  #   depends_on:
-  #     - server-rpc
-  #   command: ex5-client.lua ex5-interface.lua server-rpc 5500 5501
-    
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    networks:
+     - lua-network
+    depends_on:
+     - mosquitto
+    ports:
+      - 8086:8086
+    environment:
+      INFLUXDB_DB: mqtt
+      INFLUXDB_USER: grafana
+      INFLUXDB_USER_PASSWORD: grafana
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    networks:
+     - lua-network
+    depends_on:
+     - influxdb
+    ports:
+      - 3000:3000
+
+  influx4mqtt:
+    container_name: influx4mqtt
+    image: brunoguic/influx4mqtt
+    networks:
+     - lua-network
+    depends_on:
+     - influxdb
+    command: -n influx4mqtt -u mqtt://mosquitto -i influxdb -s '$$SYS/broker/load/messages/received/1min' -s '$$SYS/broker/load/messages/sent/1min' -s '$$SYS/broker/heap/current size' -s '$$SYS/broker/heap/maximum size' -s '$$SYS/broker/load/sockets/1min' 
+     
 networks:
   lua-network:
     name: lua-network
-
-
-
-# SERVER
-# docker run \
-#     --name server \
-#     -v "/Users/bruno.castro/Development/lua-rpc/src/:/src/" \
-#     --rm \
-#     -p 5555:5555 \
-#     -p 5556:5556 \
-#     brunoguic/lua server.lua interface.lua
-
-# CLIENT
-# docker run \
-#     --name client \
-#     -v "/Users/bruno.castro/Development/lua-rpc/src/:/src/" \
-#     --rm \
-#     brunoguic/lua client.lua interface.lua 

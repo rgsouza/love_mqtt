@@ -59,6 +59,10 @@ local function get_time()
   end
 end
 
+local function get_time_in_millis()
+  return get_time() * 1000
+end
+
 local function expired(last_time, duration, type)
   local time_expired = get_time() >= (last_time + duration)
 
@@ -151,6 +155,7 @@ Utility.set_debug = set_debug
 Utility.debug = debug
 Utility.dump_string = dump_string
 Utility.get_time = get_time
+Utility.get_time_in_millis = get_time_in_millis
 Utility.expired = expired
 Utility.shift_left = shift_left
 Utility.shift_right = shift_right
